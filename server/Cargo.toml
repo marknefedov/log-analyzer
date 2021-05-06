@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Mark Nefedov <contact@marknefedov.dev>"]
 edition = "2018"
 repository = "https://github.com/markusgod/log-analyzer"
-description = "Types shared between crates, and used in serialization"
+description = "Indexs and stores log data"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
