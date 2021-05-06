@@ -3,7 +3,8 @@ name = "log-analyzer"
 version = "0.1.0"
 authors = ["Mark Nefedov <contact@marknefedov.dev>"]
 edition = "2018"
-
+resolver = "2"
+repository = "https://github.com/markusgod/log-analyzer"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
