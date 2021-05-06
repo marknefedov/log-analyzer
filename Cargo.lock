@@ -707,6 +707,7 @@ dependencies = [
 name = "log-analyzer-collector"
 version = "0.1.0"
 dependencies = [
+ "log-analyzer-transient-types",
  "notify",
  "regex",
  "tokio",
@@ -717,6 +718,7 @@ name = "log-analyzer-server"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "log-analyzer-transient-types",
  "parking_lot",
  "serde",
  "serde_yaml",
