@@ -8,4 +8,4 @@ description = "Types shared between crates, and used in serialization"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-serde = { version = "1", featires = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
