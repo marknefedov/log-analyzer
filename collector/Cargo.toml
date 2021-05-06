@@ -1,0 +1,13 @@
+[package]
+name = "log-analyzer-collector"
+version = "0.1.0"
+authors = ["Mark Nefedov <contact@marknefedov.dev>"]
+edition = "2018"
+resolver = "2"
+repository = "https://github.com/markusgod/log-analyzer"
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+notify = "4"
+tokio = { version = "1", feaures = ["macro", "net", "sync"] }
+regex = "1.5"

@@ -1,5 +1,7 @@
 mod config;
 mod index_interface;
+mod web_interface;
+
 use crate::config::FieldType;
 use crate::index_interface::IndexInterface;
 use anyhow::Result;
