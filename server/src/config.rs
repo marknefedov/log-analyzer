@@ -24,4 +24,5 @@ pub struct Schema {
 pub struct Config {
     pub schema: Schema,
     pub storage_path: String,
+    pub port: String,
 }
