@@ -7,12 +7,16 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
+use tantivy::collector::TopDocs;
 use tantivy::directory::MmapDirectory;
+use tantivy::query::QueryParser;
 use tantivy::schema::{Field, Schema, INDEXED, STORED, TEXT};
 use tantivy::{Index, IndexReader, IndexWriter, ReloadPolicy};
 
 #[derive(Clone)]
 pub struct IndexInterface {
+    index: Arc<RwLock<Index>>,
+    schema: Arc<RwLock<Schema>>,
     index_writer: Arc<RwLock<IndexWriter>>,
     index_reader: Arc<RwLock<IndexReader>>,
     field_lookup: Arc<RwLock<HashMap<String, (Field, FieldType)>>>,
@@ -57,6 +61,8 @@ impl IndexInterface {
         let field_lookup = Arc::new(RwLock::new(field_lookup));
 
         Ok(Self {
+            index: Arc::new(RwLock::new(index)),
+            schema: Arc::new(RwLock::new(schema)),
             index_writer,
             index_reader,
             field_lookup,
@@ -80,7 +86,20 @@ impl IndexInterface {
         Ok(())
     }
 
-    pub fn search_everythig(&self) {
+    pub fn search_everything(&self, query: &str) -> Result<Vec<String>> {
+        let fields: Vec<Field> = self.field_lookup.read().iter().map(|kv_pair| kv_pair.1).map(|tuple| tuple.0).collect();
+        let index = self.index.read();
+        let query_parser = QueryParser::for_index(&index, fields);
+        let query = query_parser.parse_query(query)?;
         let searcher = self.index_reader.read().searcher();
+        let top_docs = searcher.search(&query, &TopDocs::with_limit(20))?;
+        let schema = self.schema.read();
+        let mut result = vec![];
+        for (_score, doc_address) in top_docs.iter() {
+            let doc = searcher.doc(*doc_address)?;
+            let formatted_doc = schema.to_json(&doc);
+            result.push(formatted_doc);
+        }
+        Ok(result)
     }
 }

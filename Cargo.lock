@@ -748,7 +748,7 @@ dependencies = [
 
 [[package]]
 name = "log-analyzer-collector"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "futures",
  "log-analyzer-transient-types",
@@ -765,7 +765,7 @@ dependencies = [
 
 [[package]]
 name = "log-analyzer-server"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "chrono",
@@ -785,7 +785,7 @@ dependencies = [
 
 [[package]]
 name = "log-analyzer-transient-types"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "serde",
 ]

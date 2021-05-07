@@ -20,6 +20,7 @@ async fn main() -> Result<()> {
     let index_interface = IndexInterface::new(&config)?;
     let tcp_listener = tokio::net::TcpListener::bind("0.0.0.0:".to_string() + &config.port.to_string()).await?;
     tokio::spawn(start_data_listen(tcp_listener, index_interface.clone()));
+    let wrapped_storage = warp::any().map(|| index_interface.clone());
     let routes = warp::any().map(|| "Hello, World!");
     warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
     Ok(())
