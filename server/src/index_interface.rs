@@ -46,11 +46,12 @@ impl IndexInterface {
             }
         }
         let schema = schema_builder.build();
-        let index = Index::open_or_create(MmapDirectory::open(&config.storage_path)?, schema.clone())?;
-
+        let mut index = Index::open_or_create(MmapDirectory::open(&config.storage_path)?, schema.clone())?;
+        index.set_default_multithread_executor()?;
         let index_writer = Arc::new(RwLock::new(index.writer(50_000_000)?));
         let index_writer2 = index_writer.clone();
-        thread::spawn(move || {
+        thread::spawn(move || loop {
+            tracing::trace!("Committing index to disk");
             if let Err(e) = index_writer2.write().commit() {
                 tracing::error!("Error committing changes to disk: {}", e);
             }

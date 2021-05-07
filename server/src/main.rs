@@ -1,16 +1,52 @@
 mod config;
 mod index_interface;
-mod web_interface;
 
 use crate::index_interface::IndexInterface;
 use anyhow::Result;
 use config::Config;
 use futures::TryStreamExt;
 use log_analyzer_transient_types::Document;
+use serde::{Deserialize, Serialize};
 use tokio::net::{TcpListener, TcpStream};
 use tokio_serde::formats::Cbor;
 use tokio_util::codec::{FramedRead, LengthDelimitedCodec};
-use warp::Filter;
+use warp::{Filter, Reply};
+
+#[derive(Serialize, Deserialize)]
+struct SearchQuery {
+    query: String,
+    offset: usize,
+}
+
+#[derive(Serialize, Deserialize)]
+struct SearchResult {
+    total_documents: usize,
+    docs: Vec<String>,
+}
+
+fn json_body() -> impl Filter<Extract = (SearchQuery,), Error = warp::Rejection> + Clone {
+    warp::body::content_length_limit(1024 * 16).and(warp::body::json())
+}
+
+async fn search_everything(search_query: SearchQuery, index_interface: IndexInterface) -> std::result::Result<warp::reply::Json, warp::Rejection> {
+    let result = index_interface.search_everything(&search_query.query, search_query.offset);
+    match result {
+        Ok((doc_count, documents)) => Ok(warp::reply::json(&SearchResult {
+            total_documents: doc_count,
+            docs: documents,
+        })),
+        Err(e) => {
+            tracing::error!("Search error: {}", &e);
+            Err(warp::reject())
+        }
+    }
+}
+
+pub fn build_routes(index_interface: IndexInterface) -> impl Filter<Extract = impl Reply, Error = warp::Rejection> + Clone {
+    let wrapped_storage = warp::any().map(move || index_interface.clone());
+    warp::path("search").and(json_body()).and(wrapped_storage).and(warp::path::end()).and_then(search_everything)
+    //.map(|search_query: SearchQuery, index_interface: IndexInterface| search_everything(search_query, index_interface))
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -20,8 +56,8 @@ async fn main() -> Result<()> {
     let index_interface = IndexInterface::new(&config)?;
     let tcp_listener = tokio::net::TcpListener::bind("0.0.0.0:".to_string() + &config.port.to_string()).await?;
     tokio::spawn(start_data_listen(tcp_listener, index_interface.clone()));
-    let wrapped_storage = warp::any().map(|| index_interface.clone());
-    let routes = warp::any().map(|| "Hello, World!");
+
+    let routes = build_routes(index_interface);
     warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
     Ok(())
 }
