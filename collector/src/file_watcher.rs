@@ -62,6 +62,7 @@ impl FileWatcher {
                     }
                 }
                 self.document_sink.send(doc).unwrap();
+                line.clear();
             }
         }
     }

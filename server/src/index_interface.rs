@@ -7,7 +7,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
-use tantivy::collector::TopDocs;
+use tantivy::collector::{Count, TopDocs};
 use tantivy::directory::MmapDirectory;
 use tantivy::query::QueryParser;
 use tantivy::schema::{Field, Schema, INDEXED, STORED, TEXT};
@@ -51,7 +51,9 @@ impl IndexInterface {
         let index_writer = Arc::new(RwLock::new(index.writer(50_000_000)?));
         let index_writer2 = index_writer.clone();
         thread::spawn(move || {
-            index_writer2.write().commit();
+            if let Err(e) = index_writer2.write().commit() {
+                tracing::error!("Error committing changes to disk: {}", e);
+            }
             thread::sleep(Duration::from_millis(500));
         });
 
@@ -86,13 +88,13 @@ impl IndexInterface {
         Ok(())
     }
 
-    pub fn search_everything(&self, query: &str) -> Result<Vec<String>> {
+    pub fn search_everything(&self, query: &str, offset: usize) -> Result<(usize, Vec<String>)> {
         let fields: Vec<Field> = self.field_lookup.read().iter().map(|kv_pair| kv_pair.1).map(|tuple| tuple.0).collect();
         let index = self.index.read();
         let query_parser = QueryParser::for_index(&index, fields);
         let query = query_parser.parse_query(query)?;
         let searcher = self.index_reader.read().searcher();
-        let top_docs = searcher.search(&query, &TopDocs::with_limit(20))?;
+        let (doc_count, top_docs) = searcher.search(&query, &(Count, TopDocs::with_limit(20).and_offset(offset)))?;
         let schema = self.schema.read();
         let mut result = vec![];
         for (_score, doc_address) in top_docs.iter() {
@@ -100,6 +102,6 @@ impl IndexInterface {
             let formatted_doc = schema.to_json(&doc);
             result.push(formatted_doc);
         }
-        Ok(result)
+        Ok((doc_count, result))
     }
 }
