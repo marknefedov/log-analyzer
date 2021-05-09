@@ -7,7 +7,6 @@ use anyhow::Result;
 use config::Config;
 use futures::TryStreamExt;
 use log_analyzer_transient_types::Document;
-use serde::{Deserialize, Serialize};
 use tokio::net::{TcpListener, TcpStream};
 use tokio_serde::formats::Cbor;
 use tokio_util::codec::{FramedRead, LengthDelimitedCodec};
