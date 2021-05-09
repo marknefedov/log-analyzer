@@ -9,9 +9,9 @@ use std::thread;
 use std::time::Duration;
 use tantivy::collector::{Count, TopDocs};
 use tantivy::directory::MmapDirectory;
-use tantivy::query::QueryParser;
+use tantivy::query::{FuzzyTermQuery, QueryParser};
 use tantivy::schema::{Field, Schema, INDEXED, STORED, TEXT};
-use tantivy::{Index, IndexReader, IndexWriter, ReloadPolicy};
+use tantivy::{Index, IndexReader, IndexWriter, ReloadPolicy, Term};
 
 #[derive(Clone)]
 pub struct IndexInterface {
@@ -94,6 +94,23 @@ impl IndexInterface {
         let index = self.index.read();
         let query_parser = QueryParser::for_index(&index, fields);
         let query = query_parser.parse_query(query)?;
+        let searcher = self.index_reader.read().searcher();
+        let (doc_count, top_docs) = searcher.search(&query, &(Count, TopDocs::with_limit(20).and_offset(offset)))?;
+        let schema = self.schema.read();
+        let mut result = vec![];
+        for (_score, doc_address) in top_docs.iter() {
+            let doc = searcher.doc(*doc_address)?;
+            let formatted_doc = schema.to_json(&doc);
+            result.push(formatted_doc);
+        }
+        Ok((doc_count, result))
+    }
+
+    pub fn fuzzy_search(&self, field: &str, search: &str, distance: u8, offset: usize) -> Result<(usize, Vec<String>)> {
+        //let fields: Vec<Field> = fields.iter().map(|filed_name| self.field_lookup.read().get(filed_name)).flatten().map(|tuple| tuple.0).collect();
+        let field = if let Some(field) = self.field_lookup.read().get(field) { field.0 } else { return Ok((0, vec![])) };
+        let term = Term::from_field_text(field, search);
+        let query = FuzzyTermQuery::new(term, distance, false);
         let searcher = self.index_reader.read().searcher();
         let (doc_count, top_docs) = searcher.search(&query, &(Count, TopDocs::with_limit(20).and_offset(offset)))?;
         let schema = self.schema.read();
