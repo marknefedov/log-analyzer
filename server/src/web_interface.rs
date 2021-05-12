@@ -34,6 +34,8 @@ async fn search_everything(search_query: SearchQuery, index_interface: IndexInte
 
 pub fn build_routes(index_interface: IndexInterface) -> impl Filter<Extract = impl Reply, Error = warp::Rejection> + Clone {
     let wrapped_storage = warp::any().map(move || index_interface.clone());
-    warp::path("search").and(json_body()).and(wrapped_storage).and(warp::path::end()).and_then(search_everything)
+    let index = warp::get().and(warp::fs::dir("web"));
+    let search = warp::path("search").and(json_body()).and(wrapped_storage).and(warp::path::end()).and_then(search_everything);
+    index.or(search)
     //.map(|search_query: SearchQuery, index_interface: IndexInterface| search_everything(search_query, index_interface))
 }
