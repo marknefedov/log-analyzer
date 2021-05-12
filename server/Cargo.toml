@@ -1,6 +1,6 @@
 [package]
 name = "log-analyzer-server"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Mark Nefedov <contact@marknefedov.dev>"]
 edition = "2018"
 repository = "https://github.com/markusgod/log-analyzer"
@@ -22,4 +22,5 @@ chrono = "0.4"
 tracing = "0.1"
 tracing-subscriber = "0.2"
 warp = "0.3"
+rsyslog = "0.1"
 log-analyzer-transient-types = { version = "0.1", path = "../transient-types"}

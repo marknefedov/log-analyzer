@@ -45,6 +45,7 @@ impl IndexInterface {
                 }
             }
         }
+        field_lookup.insert("syslog".into(), (schema_builder.add_text_field("syslog".into(), STORED | TEXT), FieldType::Text));
         let schema = schema_builder.build();
         let mut index = Index::open_or_create(MmapDirectory::open(&config.storage_path)?, schema.clone())?;
         index.set_default_multithread_executor()?;
