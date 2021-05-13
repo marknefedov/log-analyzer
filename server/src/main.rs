@@ -27,7 +27,7 @@ async fn main() -> Result<()> {
     tokio::spawn(start_syslog_listen_udp(index_interface.clone()));
 
     let routes = web_interface::build_routes(index_interface);
-    warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
+    warp::serve(routes).run(([0, 0, 0, 0], 3030)).await;
     Ok(())
 }
 
