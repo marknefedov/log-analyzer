@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <script src="bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <title>Search</title>
+    <style>
+        .bd-example {
+            padding: 1.5rem;
+            border-top-left-radius: .25rem;
+            border-top-right-radius: .25rem;
+            border: 1px solid #dee2e6;
+        }
+        .offset{
+            max-width: 20%;
+        }
+    </style>
+</head>
+<body>
+<script>
+    async function postData(url = '', data = {}) {
+        const response = await fetch(url, {
+            method: 'POST',
+            mode: 'cors',
+            cache: 'no-cache',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            redirect: 'follow',
+            referrerPolicy: 'no-referrer',
+            body: JSON.stringify(data)
+        });
+        return await response.json();
+    }
+    async function search() {
+        let formData = new FormData(document.querySelector('form'))
+        let offset = formData.get('offset') ? formData.get('offset'): 0
+        offset = parseInt(offset, 10)
+        let query_obj = {
+            query: formData.get('query').toString(),
+            offset: offset
+        }
+        console.log(query_obj)
+        let res = await postData('/search', query_obj);
+        console.log(res)
+        //document.getElementById('response').innerHTML = JSON.stringify(res)
+        const mainContainer = document.getElementById("response");
+        mainContainer.textContent = ''
+        for (let i = 0; i < res.docs.length; i++) {
+            let div = document.createElement("code");
+            div.innerHTML = res.docs[i]
+            mainContainer.appendChild(div);
+            mainContainer.appendChild(document.createElement("br"))
+        }
+    }
+</script>
+<div class="container">
+    <form class="input-group mb-3">
+        <input id="query" name="query" type="text" class="form-control" placeholder="query" aria-label="query" required>
+        <input id="offset" name="offset" type="number" class="form-control offset" placeholder="offset" aria-label="offset" required>
+        <button class="btn btn-primary" type="button" onclick="search()">Search</button>
+    </form>
+    <div class="container bd-example" id="response">
+
+    </div>
+</div>
+</body>
+</html>
